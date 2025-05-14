@@ -99,7 +99,7 @@ int vmaf_init(VmafContext **vmaf, VmafConfiguration cfg)
     vmaf_init_cpu();
     vmaf_set_cpu_flags_mask(~cfg.cpumask);
 
-    vmaf_set_log_level(cfg.log_level);
+    vmaf_set_log_level(VMAF_LOG_LEVEL_DEBUG);
 
     err = vmaf_framesync_init(&(v->framesync));
     if (err) goto free_v;
@@ -209,8 +209,6 @@ int vmaf_cuda_fetch_preallocated_picture(VmafContext *vmaf, VmafPicture* pic)
     if (!vmaf) return -EINVAL;
     if (!pic) return -EINVAL;
     if (!vmaf->cuda.ring_buffer) return -EINVAL;
-
-    //TODO: preallocate host pics
 
     switch (vmaf->cuda.cfg.pic_prealloc_method) {
     case VMAF_CUDA_PICTURE_PREALLOCATION_METHOD_DEVICE:

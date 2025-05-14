@@ -30,6 +30,8 @@ static enum VmafPixelFormat pix_fmt_map(int pf)
 static int validate_videos(video_input *vid1, video_input *vid2, bool common_bitdepth)
 {
     int err_cnt = 0;
+    
+    fprintf(stderr, "validating video inputs...\n");
 
     video_input_info info1, info2;
     video_input_get_info(vid1, &info1);
@@ -70,6 +72,8 @@ static int validate_videos(video_input *vid1, video_input *vid2, bool common_bit
 
 static int fetch_picture(video_input *vid, VmafPicture *pic, int depth)
 {
+    fprintf(stderr, "fetching picture...\n");
+    
     int ret;
     video_input_ycbcr ycbcr;
     video_input_info info;
@@ -178,6 +182,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "VMAF version %s\n", vmaf_version());
     }
 
+    fprintf(stderr, "VMAF version %s\n", vmaf_version());
+
     FILE *file_ref = fopen(c.path_ref, "rb");
     if (!file_ref) {
         fprintf(stderr, "could not open file: %s\n", c.path_ref);
@@ -213,6 +219,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "problem with distorted file: %s\n", c.path_dist);
         return -1;
     }
+    
 
     err = validate_videos(&vid_ref, &vid_dist, c.common_bitdepth);
     if (err) {

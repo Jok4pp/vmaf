@@ -270,6 +270,7 @@ class VmafFeatureExtractor(VmafexecFeatureExtractorMixin, FeatureExtractor):
                 elif opt == 'n_threads':
                     options['n_threads'] = self.optional_dict2['n_threads']
 
+        print("\n \n", log_file_path)
         ExternalProgramCaller.call_vmafexec_multi_features(
             features, yuv_type, ref_path, dis_path, w, h, log_file_path,
             logger, options=options
@@ -485,6 +486,8 @@ class VifFrameDifferenceFeatureExtractor(FeatureExtractor):
         h = quality_height
         logger = self.logger
 
+
+        print("\n \n", log_file_path)
         ExternalProgramCaller.call_vifdiff_feature(yuv_type, ref_path, dis_path, w, h, log_file_path, logger)
 
     @classmethod

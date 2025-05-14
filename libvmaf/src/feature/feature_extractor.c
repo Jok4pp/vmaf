@@ -50,6 +50,7 @@ extern VmafFeatureExtractor vmaf_fex_integer_adm;
 extern VmafFeatureExtractor vmaf_fex_integer_motion;
 extern VmafFeatureExtractor vmaf_fex_integer_vif;
 extern VmafFeatureExtractor vmaf_fex_cambi;
+extern VmafFeatureExtractor vmaf_fex_delta_eitp;
 #if HAVE_CUDA
 extern VmafFeatureExtractor vmaf_fex_integer_adm_cuda;
 extern VmafFeatureExtractor vmaf_fex_integer_vif_cuda;
@@ -75,6 +76,7 @@ static VmafFeatureExtractor *feature_extractor_list[] = {
     &vmaf_fex_integer_motion,
     &vmaf_fex_integer_vif,
     &vmaf_fex_cambi,
+    &vmaf_fex_delta_eitp,
 #if HAVE_CUDA
     &vmaf_fex_integer_adm_cuda,
     &vmaf_fex_integer_vif_cuda,
@@ -87,7 +89,8 @@ static VmafFeatureExtractor *feature_extractor_list[] = {
 VmafFeatureExtractor *vmaf_get_feature_extractor_by_name(const char *name)
 {
     if (!name) return NULL;
-
+    fprintf(stdout, "Looking for feature extractor: %s\n", name);
+    
     VmafFeatureExtractor *fex = NULL;
     for (unsigned i = 0; (fex = feature_extractor_list[i]); i++) {
         if (!strcmp(name, fex->name))
@@ -101,7 +104,7 @@ VmafFeatureExtractor *vmaf_get_feature_extractor_by_feature_name(const char *nam
         unsigned flags)
 {
     if (!name) return NULL;
-
+    fprintf(stdout, "Looking for feature extractor: %s\n", name);
     VmafFeatureExtractor *fex = NULL;
 
     for (unsigned i = 0; (fex = feature_extractor_list[i]); i++) {

@@ -336,7 +336,7 @@ class Executor(TypeVersionEnabled):
         else:
 
             if self.logger:
-                self.logger.info('{id} result does\'t exist. Perform {id} '
+                self.logger.info('{id} result doesn\'t exist. Perform {id} '
                                  'calculation.'.format(id=self.executor_id))
 
             # at this stage, it is certain that asset.ref_path and
@@ -369,6 +369,7 @@ class Executor(TypeVersionEnabled):
                 self._close_procfiles(asset)
 
             log_file_path = self._get_log_file_path(asset)
+            print("log_file_path: ", log_file_path)
             make_parent_dirs_if_nonexist(log_file_path)
 
             if asset.use_path_as_workpath:

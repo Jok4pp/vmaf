@@ -5,6 +5,8 @@ matplotlib.use('Agg')
 
 import os
 import sys
+import time
+import logging
 
 import numpy as np
 from vmaf.config import DisplayConfig
@@ -111,7 +113,25 @@ def main():
     else: # None or 'mean'
         aggregate_method = np.mean
 
-    logger = None
+    # logger = None
+        # Enable logging
+    logger = logging.getLogger("vmaf_logger")  # Replace with the appropriate logger name
+    logger.setLevel(logging.DEBUG)  # Set the logging level to DEBUG to capture all messages
+
+    # Add a console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+
+    # Set a formatter for the console handler
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+
+    # Add the handler to the logger
+    logger.addHandler(console_handler)
+
+    # Example usage
+    logger.info("Logger is now enabled.")
+    logger.debug("This is a debug message.")
 
     try:
         if suppress_plot:
@@ -120,6 +140,8 @@ def main():
         from vmaf import plt
         fig, ax = plt.subplots(figsize=(5, 5), nrows=1, ncols=1)
 
+        start_time = time.time()
+        
         train_test_vmaf_on_dataset(train_dataset=train_dataset, test_dataset=None,
                                    feature_param=feature_param, model_param=model_param,
                                    train_ax=ax, test_ax=None,
@@ -131,6 +153,10 @@ def main():
                                    subj_model_class=subj_model_class,
                                    processes=processes,
                                    )
+        
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Training process completed in {elapsed_time:.2f} seconds.")
 
         bbox = {'facecolor':'white', 'alpha':0.5, 'pad':20}
         ax.annotate('Training Set', xy=(0.1, 0.85), xycoords='axes fraction', bbox=bbox)
@@ -147,6 +173,9 @@ def main():
 
     except ImportError:
         print_matplotlib_warning()
+
+        start_time = time.time()
+
         train_test_vmaf_on_dataset(train_dataset=train_dataset, test_dataset=None,
                                    feature_param=feature_param, model_param=model_param,
                                    train_ax=None, test_ax=None,
@@ -158,6 +187,12 @@ def main():
                                    subj_model_class=subj_model_class,
                                    processes=processes,
                                    )
+        
+        # End timing
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Training process completed in {elapsed_time:.2f} seconds.")
+
     except AssertionError:
         train_test_vmaf_on_dataset(train_dataset=train_dataset, test_dataset=None,
                                    feature_param=feature_param, model_param=model_param,
@@ -170,6 +205,11 @@ def main():
                                    subj_model_class=subj_model_class,
                                    processes=processes,
                                    )
+        
+         # End timing
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Training process completed in {elapsed_time:.2f} seconds.")
 
     return 0
 

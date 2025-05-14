@@ -15,3 +15,5 @@ dist/
 vmaf_output.xml
 compile_commands.json
 LIVE_HDR_Public
+mini_dataset
+LIVE-HDR_1

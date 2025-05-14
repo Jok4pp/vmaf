@@ -38,16 +38,33 @@ class ProcessRunner(object):
     def run(self, cmd, kwargs):
         try:
             logger.info(cmd)
-            subprocess.check_output(cmd, stderr=subprocess.STDOUT, **kwargs)
+            # subprocess.check_output(cmd, stderr=subprocess.STDOUT, **kwargs)
+            subprocess.run(cmd, check=True, **kwargs)
         except subprocess.CalledProcessError as e:
             raise AssertionError(f'Process returned {e.returncode}, cmd: {cmd}, kwargs: {kwargs}, msg: {str(e.output)}')
 
 
+    # def run(self, cmd, kwargs):
+    #     logger.info(cmd)
+    #     ret = subprocess.call(cmd, shell=isinstance(cmd, str), **kwargs)
+    #     if ret != 0:
+    #         raise AssertionError(f'External program failed with exit code {ret}: {cmd}')
+            
 def run_process(cmd, **kwargs):
     process_runner = ProcessRunner()
+    print("\n Command: \n", cmd)
     process_runner.run(cmd, kwargs)
+    # subprocess.run(cmd, check=True, **kwargs)
     return 0
 
+# def run_process(cmd, **kwargs):
+#     """
+#     Spawn the external vmaf CLI and return its stdout.
+#     """
+#     # ensure we’re in the vmaf root so relative paths work
+#     cwd = kwargs.pop('cwd', VMAF_ROOT)
+#     # if you already have a ProcessRunner, you can delegate:
+#     return ProcessRunner().run(cmd, dict(cwd=cwd, **kwargs))
 
 def project_path(relative_path):
     path = os.path.join(VMAF_ROOT, relative_path)

@@ -1,0 +1,65 @@
+// {
+//     "version": "0.2.0",
+//     "configurations": [
+
+
+//       {
+//         "name": "Debug VMAF C-backend",
+//         "type": "cppdbg",
+//         "request": "launch",
+//         "program": "${workspaceFolder}/.venv/bin/python",
+//         "args": [
+//           "-u",
+//           "${workspaceFolder}/python/vmaf/script/run_vmaf_training.py",
+//           "resource/example/example_dataset.py",
+//           "resource/feature_param/vmaf_feature_v6.py",
+//           "resource/model_param/libsvmnusvr_v2.py",
+//           "workspace/model/test_model2.pkl",
+//           "--cache-result"
+//         ],
+//         "cwd": "${workspaceFolder}",
+//         "environment": [
+//           { "name": "PYTHONPATH", "value": "${workspaceFolder}/python" }
+//         ],
+//         "externalConsole": false,                // ← open a real terminal
+//         "MIMode": "gdb",
+//         "miDebuggerPath": "/usr/bin/gdb",
+//         "setupCommands": [
+//           {
+//             "description": "pretty-printing for gdb",
+//             "text": "-enable-pretty-printing",
+//             "ignoreFailures": true
+//           },
+//           {
+//             "description": "follow fork into child process",
+//             "text": "set follow-fork-mode child"
+//           }
+//         ]
+//       }
+//     ]
+//   }
+
+
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug VMAF Python Script",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/vmaf/script/run_vmaf_training.py",
+      "args": [
+        "resource/dataset/LIVE-HDR_1.py",
+        "resource/feature_param/vmaf_feature_v6.py",
+        "resource/model_param/libsvmnusvr_v2.py",
+        "workspace/model/test_model2.pkl"
+      ],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python"
+      },
+      "console": "integratedTerminal", // Use the integrated terminal for output
+      "justMyCode": false             // Debug into third-party libraries if needed
+    }
+  ]
+}

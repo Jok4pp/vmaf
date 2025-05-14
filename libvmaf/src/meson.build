@@ -274,11 +274,11 @@ cuda_inc = []
 
 if is_nvtx_enabled
     cuda_dependency += declare_dependency(link_args : ['-ldl'])
-    cuda_inc += include_directories('/usr/local/cuda/include')
+    cuda_inc += include_directories('/usr/lib/cuda/include')
 endif
 
 if is_cuda_enabled
-    cuda_inc += include_directories('/usr/local/cuda/include')
+    cuda_inc += include_directories('/usr/lib/cuda/include')
 
     cuda_cu_sources = {
         'adm_dwt2' : [feature_src_dir + 'cuda/integer_adm/adm_dwt2.cu'],
@@ -296,8 +296,8 @@ if is_cuda_enabled
         cuda_dir + 'ring_buffer.c',
     ]
 
-    cuda_drv_api_dependency = declare_dependency(link_args : ['-lcuda'])
-    cuda_rt_api_dependency = dependency('cuda', version : '>=10')
+    cuda_drv_api_dependency = declare_dependency(link_args : ['-L/usr/lib/cuda/lib64', '-lcuda'])
+    cuda_rt_api_dependency = declare_dependency(link_args : ['-L/usr/lib/cuda/lib64', '-lcudart_static'])
 
     cuda_dependency += cuda_drv_api_dependency
     cuda_dependency += cuda_rt_api_dependency
@@ -312,7 +312,7 @@ if is_cuda_enabled
         endif
     endif
 
-    nvcc_exe = find_program('nvcc')
+    nvcc_exe = find_program('/usr/bin/nvcc')
     ptx_files = {}
     foreach name, _cu : cuda_cu_sources
         t = custom_target('cu_ptx_target_' + name,
@@ -399,6 +399,12 @@ libvmaf_feature_sources = [
     feature_src_dir + 'iqa/math_utils.c',
     feature_src_dir + 'iqa/convolve.c',
     feature_src_dir + 'cambi.c',
+    
+    feature_src_dir + 'deltaEITP.c',
+    feature_src_dir + 'yuv_to_rgb.c',
+    feature_src_dir + 'inverse_pq.c', 
+    feature_src_dir + 'rgb_to_ictcp.c',
+
     feature_src_dir + 'luminance_tools.c',
     feature_src_dir + 'null.c',
 ]

@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "mem.h": "c",
+        "vif_options.h": "c",
+        "offset.h": "c",
+        "functional": "cpp",
+        "__functional_base": "cpp",
+        "adm_options.h": "c",
+        "terminal.external.linuxExec": "xterm"
+    }
+}
