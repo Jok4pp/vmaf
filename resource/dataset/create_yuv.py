@@ -1,36 +1,70 @@
 import subprocess
 
-def convert_mp4_to_yuv(input_file, output_file, width=3840, height=2160, first_frame_only=False):
+def convert_mp4_to_yuv(input_file, output_file,
+                       width=3840, height=2160,
+                       first_frame_only=False,
+                       output_format='yuv'):
     """
-    Converts an MP4 file to a raw YUV file using FFmpeg.
+    Converts an MP4 file to either raw YUV or TIFF (YUV420) using FFmpeg.
 
     Args:
-        input_file (str): Path to the input MP4 file.
-        output_file (str): Path to the output YUV file.
-        width (int): Width of the video (required for raw YUV).
-        height (int): Height of the video (required for raw YUV).
-        first_frame_only (bool): If True, only the first frame will be converted.
+        input_file (str): Path to input MP4.
+        output_file (str): Path to output file.
+        width (int), height (int): Needed for raw YUV.
+        first_frame_only (bool): Extract only the very first frame.
+        output_format (str): 'yuv' (default) or 'tiff'
     """
     try:
-        command = [
-            "ffmpeg",
-            "-i", input_file,
-            "-pix_fmt", "yuv420p",
-            "-s", f"{width}x{height}",
-            "-f", "rawvideo",
-        ]
-        if first_frame_only:
-            command.extend(["-frames:v", "1"])  # Add option to extract only the first frame
-        command.append(output_file)
+        if output_format == 'yuv':
+            # raw YUV420p
+            cmd = [
+                "ffmpeg",
+                "-i", input_file,
+                "-pix_fmt", "yuv420p10le",
+                "-s", f"{width}x{height}"
+            ]
+            if first_frame_only:
+                cmd += ["-frames:v", "1"]
+            cmd += ["-f", "rawvideo", output_file]
 
-        subprocess.run(command, check=True)
-        print(f"✅ Conversion successful! YUV file saved at: {output_file}")
+        elif output_format == 'tiff':
+            # single‐frame or multi‐frame TIFF(s) with YUV420p colorspace
+            cmd = [
+                "ffmpeg",
+                "-i", input_file,
+                "-pix_fmt", "yuv420p10le",
+                "-s", f"{width}x{height}"
+            ]
+            if first_frame_only:
+                cmd += ["-frames:v", "1"]
+                # output_file should end in .tiff
+                cmd += ["-f", "image2", "-vcodec", "tiff", output_file]
+            else:
+                # to dump all frames as frame0001.tiff, frame0002.tiff, ...
+                base, ext = output_file.rsplit('.', 1)
+                cmd += ["-f", "image2", "-vcodec", "tiff", base + "_%04d.tiff"]
+        else:
+            raise ValueError("output_format must be 'yuv' or 'tiff'")
+
+        subprocess.run(cmd, check=True)
+        print(f"✅ Conversion to {output_format} successful: {output_file}")
+
     except subprocess.CalledProcessError as e:
-        print(f"❌ Error during conversion: {e}")
+        print(f"❌ ffmpeg error: {e}")
     except FileNotFoundError:
-        print("⚠️ FFmpeg not found. Please ensure it is installed and in your PATH.")
+        print("⚠️ FFmpeg not found. Install it or add to PATH.")
 
 if __name__ == "__main__":
-    input_mp4 = r"/home/joel-ludwig/Dokumente/Masterarbeit_Ludwig/vmaf/resource/dataset/LIVE_HDR_Public/LIVE_HDR_Part1/4k_15M_firework.mp4"
-    output_yuv = r"/home/joel-ludwig/Dokumente/Masterarbeit_Ludwig/vmaf/LIVE-HDR_1/dis/4k_15M_firework.yuv"
-    convert_mp4_to_yuv(input_mp4, output_yuv, first_frame_only=True)
+    mp4 = "resource/dataset/LIVE_HDR_Public/LIVE_HDR_Part1/4k_15M_football3.mp4"
+    # raw YUV:
+
+    # convert_mp4_to_yuv(mp4,
+    #                   "LIVE-HDR_1/ref/4k_ref_football3.yuv",
+    #                   first_frame_only=True,
+    #                   output_format='yuv')
+    
+    # single‐frame YUV420 TIFF:
+    convert_mp4_to_yuv(mp4,
+                      "LIVE-HDR_tiff/dis/4k_15M_football3.tiff",
+                      first_frame_only=True,
+                      output_format='tiff')

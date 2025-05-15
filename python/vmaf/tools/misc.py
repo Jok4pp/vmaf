@@ -189,7 +189,7 @@ def import_python_file(filepath : str, override : dict = None):
             from importlib.machinery import SourceFileLoader
             ret = SourceFileLoader(filename, filepath).load_module()
         except ImportError:
-            import imp
+            # import imp
             ret = imp.load_source(filename, filepath)
         return ret
     else:

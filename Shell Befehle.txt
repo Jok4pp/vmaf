@@ -1,0 +1,37 @@
+PYTHONPATH=python ./python/vmaf/script/run_vmaf.py \
+    yuv420p 3840 2160 \
+    /home/joel-ludwig/Dokumente/Masterarbeit_Ludwig/vmaf/test_dataset/ref/4k_ref_football2.yuv \
+    /home/joel-ludwig/Dokumente/Masterarbeit_Ludwig/vmaf/test_dataset/dis/4k_6M_football2.yuv \
+    --out-fmt json
+    
+
+    
+PYTHONPATH=python ./python/vmaf/script/run_testing.py \
+    VMAF \
+    ./resource/dataset/LIVE-HDR_1.py \
+    --cache-result \
+
+
+PYTHONPATH=python ./python/vmaf/script/run_vmaf_training.py \
+    resource/dataset/LIVE-HDR_1.py \
+    resource/feature_param/vmaf_feature_v6.py \
+    resource/model_param/libsvmnusvr_v2.py \
+    workspace/model/test_model2.pkl \
+    --cache-result \
+    --parallelize
+    
+    
+    
+ PYTHONPATH=python ./python/vmaf/script/run_vmaf_training.py \
+    resource/example/example_dataset.py \
+    resource/feature_param/vmaf_feature_v2.py \
+    resource/model_param/libsvmnusvr_v2.py \
+    workspace/model/test_model.pkl \
+    --subj-model MLE_CO_AP2 \
+    --cache-result \
+    --parallelize
+    
+    
+    
+    
+

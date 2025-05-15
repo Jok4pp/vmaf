@@ -21,36 +21,34 @@ typedef struct DeltaEITPState {
 
 static void scale_chroma_planes_hbd(VmafPicture *in, VmafPicture *out)
 {
+    memcpy(out->data[0], in->data[0], (size_t)out->h[0] * out->stride[0]);
     const int ss_hor = in->pix_fmt != VMAF_PIX_FMT_YUV444P;
     const int ss_ver = in->pix_fmt == VMAF_PIX_FMT_YUV420P;
 
-    for (unsigned p = 1; p < 3; p++) { // Process chroma planes (U and V)
-        uint16_t *in_buf = in->data[p];
-        uint16_t *out_buf = out->data[p];
+    for (unsigned p = 1; p < 3; p++) { // U and V
         for (unsigned i = 0; i < out->h[p]; i++) {
+            uint16_t *src_line = (uint16_t*)in->data[p] + (i / (ss_ver ? 2 : 1)) * (in->stride[p] / 2);
+            uint16_t *dst_line = (uint16_t*)out->data[p] + i * (out->stride[p] / 2);
             for (unsigned j = 0; j < out->w[p]; j++) {
-                out_buf[j] = in_buf[(i / (ss_ver ? 2 : 1)) * in->stride[p] / 2 + (j / (ss_hor ? 2 : 1))];
+                dst_line[j] = src_line[j / (ss_hor ? 2 : 1)];
             }
-            in_buf += in->stride[p] / 2;
-            out_buf += out->stride[p] / 2;
         }
     }
 }
 
 static void scale_chroma_planes(VmafPicture *in, VmafPicture *out)
 {
+    memcpy(out->data[0], in->data[0], out->h[0] * out->stride[0]);
     const int ss_hor = in->pix_fmt != VMAF_PIX_FMT_YUV444P;
     const int ss_ver = in->pix_fmt == VMAF_PIX_FMT_YUV420P;
 
-    for (unsigned p = 1; p < 3; p++) { // Process chroma planes (U and V)
-        uint8_t *in_buf = in->data[p];
-        uint8_t *out_buf = out->data[p];
+    for (unsigned p = 1; p < 3; p++) { // U and V
         for (unsigned i = 0; i < out->h[p]; i++) {
+            uint8_t *src_line = in->data[p] + (i / (ss_ver ? 2 : 1)) * in->stride[p];
+            uint8_t *dst_line = out->data[p] + i * out->stride[p];
             for (unsigned j = 0; j < out->w[p]; j++) {
-                out_buf[j] = in_buf[(i / (ss_ver ? 2 : 1)) * in->stride[p] + (j / (ss_hor ? 2 : 1))];
+                dst_line[j] = src_line[j / (ss_hor ? 2 : 1)];
             }
-            in_buf += in->stride[p];
-            out_buf += out->stride[p];
         }
     }
 }
@@ -107,6 +105,8 @@ static int extract(VmafFeatureExtractor *fex,
     VmafPicture *ref;
     VmafPicture *dist;
 
+    
+
     if (ref_pic->pix_fmt == VMAF_PIX_FMT_YUV444P) {
         // Reuse the provided buffers
         ref = ref_pic;
@@ -126,6 +126,8 @@ static int extract(VmafFeatureExtractor *fex,
         return -EINVAL;
     }
 
+    /* normalization divisor based on bits-per-channel */
+    double max_val = (double)((1u << ref->bpc) - 1u);
     double sum_delta_eitp = 0.0;
 
     // Process each pixel
@@ -156,15 +158,40 @@ static int extract(VmafFeatureExtractor *fex,
                 fprintf(stderr, "Unsupported bit depth: %u\n", ref->bpc);
                 return -EINVAL;
             }
+            
+            if (i == 0 && j == 0)
+                fprintf(stderr,
+                    "[debug] YUV      @ (0,0): refY=%f refU=%f refV=%f | "
+                    "distY=%f distU=%f distV=%f\n",
+                    r_y, r_u, r_v, d_y, d_u, d_v);  
+            
+            // /* Normalize YUV values */
+            // double refYp  =  r_y / max_val;
+            // double refCb = (r_u / max_val) - 0.5;
+            // double refCr = (r_v / max_val) - 0.5;
 
-            // Normalize YUV values
-            double refYp = r_y / 1023.0;
-            double refCb = (r_u / 1023.0) - 0.5;
-            double refCr = (r_v / 1023.0) - 0.5;
+            // double distYp  =  d_y / max_val;
+            // double distCb = (d_u / max_val) - 0.5;
+            // double distCr = (d_v / max_val) - 0.5;
 
-            double distYp = d_y / 1023.0;
-            double distCb = (d_u / 1023.0) - 0.5;
-            double distCr = (d_v / 1023.0) - 0.5;
+            const double Ymin =  64.0;
+            const double Ymax = 940.0;
+            const double Cmin =  64.0;
+            const double Cmax =1000.0; // motion-picture range U/V
+
+            double refYp  = (r_y - Ymin)/(Ymax - Ymin);
+            double refCb = (r_u - (1<<9))/(Cmax - Cmin);
+            double refCr = (r_v - (1<<9))/(Cmax - Cmin);
+
+            double distYp  = (d_y - Ymin)/(Ymax - Ymin);
+            double distCb = (d_u - (1<<9))/(Cmax - Cmin);
+            double distCr = (d_v - (1<<9))/(Cmax - Cmin);
+            
+            if (i == 0 && j == 0)
+                fprintf(stderr,
+                       "[debug] Norm YUV @ (0,0): refYp=%f refCb=%f refCr=%f | "
+                       "distYp=%f distCb=%f distCr=%f\n",
+                        refYp, refCb, refCr, distYp, distCb, distCr);
 
             // Convert YUV to RGB
             double refRp, refGp, refBp;
@@ -172,6 +199,13 @@ static int extract(VmafFeatureExtractor *fex,
 
             double distRp, distGp, distBp;
             yuv2020_to_rgbPQ(distYp, distCb, distCr, &distRp, &distGp, &distBp);
+
+            if (i == 0 && j == 0)
+                fprintf(stderr,
+                    "[debug] RGB PQ   @ (0,0): refRp=%f refGp=%f refBp=%f | "
+                    "distRp=%f distGp=%f distBp=%f\n",
+                    refRp, refGp, refBp, distRp, distGp, distBp);
+ 
 
             // Convert RGB to linear
             double refRlin = inverse_pq_eotf(refRp);
@@ -181,6 +215,12 @@ static int extract(VmafFeatureExtractor *fex,
             double distRlin = inverse_pq_eotf(distRp);
             double distGlin = inverse_pq_eotf(distGp);
             double distBlin = inverse_pq_eotf(distBp);
+            
+            if (i == 0 && j == 0)
+                fprintf(stderr,
+                    "[debug] Linear RGB @ (0,0): refRlin=%f refGlin=%f refBlin=%f | "
+                    "distRlin=%f distGlin=%f distBlin=%f\n",
+                    refRlin, refGlin, refBlin, distRlin, distGlin, distBlin);
 
             // Convert linear RGB to ICtCp
             float Ic_ref, Ct_ref, Cp_ref;
@@ -189,17 +229,25 @@ static int extract(VmafFeatureExtractor *fex,
             float Ic_dist, Ct_dist, Cp_dist;
             rgb2020_to_ictcp(distRlin, distGlin, distBlin, &Ic_dist, &Ct_dist, &Cp_dist);
 
+            if (i == 0 && j == 0)
+                fprintf(stderr,
+                    "[debug] ICtCp     @ (0,0): ref(I=%f,T=%f,P=%f) | "
+                    "dist(I=%f,T=%f,P=%f)\n",
+                    Ic_ref, Ct_ref, Cp_ref, Ic_dist, Ct_dist, Cp_dist);
+
             // Compute ΔEITP
             double delta_I = Ic_ref - Ic_dist;
             double delta_T = 0.5 * (Ct_ref - Ct_dist);
             double delta_P = Cp_ref - Cp_dist;
 
-            double delta_eitp_pixel = sqrt(720.0 * (delta_I * delta_I + delta_T * delta_T + delta_P * delta_P));
+            double delta_eitp_pixel = 720.0 * sqrt(delta_I * delta_I + delta_T * delta_T + delta_P * delta_P);
             sum_delta_eitp += delta_eitp_pixel;
+            
         }
     }
 
     double avg_delta_eitp = sum_delta_eitp / (w * h);
+    fprintf(stderr, "Image index %u: deltaEITP = %f\n", index, avg_delta_eitp);
 
     // Append result to feature collector
     return vmaf_feature_collector_append(feature_collector, "delta_eitp", avg_delta_eitp, index);

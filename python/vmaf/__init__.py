@@ -109,6 +109,9 @@ def convert_pixel_format_ffmpeg2vmafexec(ffmpeg_pix_fmt):
         bitdepth = 16
     else:
         assert False
+
+
+    print ("bitdepth=", bitdepth)
     return pixel_format, bitdepth
 
 

@@ -50,7 +50,7 @@
       "program": "${workspaceFolder}/python/vmaf/script/run_vmaf_training.py",
       "args": [
         "resource/dataset/LIVE-HDR_1.py",
-        "resource/feature_param/vmaf_feature_v6.py",
+        "resource/feature_param/vmaf_feature_with_deltaEITP.py",
         "resource/model_param/libsvmnusvr_v2.py",
         "workspace/model/test_model2.pkl"
       ],

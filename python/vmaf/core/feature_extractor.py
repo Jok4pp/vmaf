@@ -928,3 +928,42 @@ class AnsnrFeatureExtractor(VmafexecFeatureExtractorMixin, FeatureExtractor):
         ExternalProgramCaller.call_vmafexec_single_feature(
             'float_ansnr', yuv_type, ref_path, dis_path, w, h, log_file_path, logger,
             options={**optional_dict2})
+
+
+class DeltaEITPFeatureExtractor(VmafexecFeatureExtractorMixin, FeatureExtractor):
+    """
+    Feature extractor for deltaEITP.
+    """
+
+    TYPE = "deltaEITP_feature"
+    VERSION = "1.0"
+
+    ATOM_FEATURES = ['delta_eitp']
+
+    ATOM_FEATURES_TO_VMAFEXEC_KEY_DICT = {
+        'delta_eitp': 'delta_eitp',
+    }
+
+    def _generate_result(self, asset):
+        """
+        Routine to call the command-line executable and generate feature
+        scores in the log file.
+        """
+        quality_width, quality_height = asset.quality_width_height
+        log_file_path = self._get_log_file_path(asset)
+
+        yuv_type = self._get_workfile_yuv_type(asset)
+        
+        ref_path = asset.ref_procfile_path
+        dis_path = asset.dis_procfile_path
+        w = quality_width
+        h = quality_height
+        logger = self.logger
+
+        optional_dict2 = self.optional_dict2 if self.optional_dict2 is not None else dict()
+
+        # Call the external program to compute the deltaEITP feature
+        ExternalProgramCaller.call_vmafexec_single_feature(
+            'delta_eitp', yuv_type, ref_path, dis_path, w, h,
+            log_file_path, logger, options={**optional_dict2}
+        )

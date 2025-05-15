@@ -114,24 +114,26 @@ def main():
         aggregate_method = np.mean
 
     # logger = None
-        # Enable logging
-    logger = logging.getLogger("vmaf_logger")  # Replace with the appropriate logger name
-    logger.setLevel(logging.DEBUG)  # Set the logging level to DEBUG to capture all messages
+    #     # Enable logging
+    # logger = logging.getLogger("vmaf_logger")  # Replace with the appropriate logger name
+    # logger.setLevel(logging.DEBUG)  # Set the logging level to DEBUG to capture all messages
 
-    # Add a console handler
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG)
+    # # Add a console handler
+    # console_handler = logging.StreamHandler()
+    # console_handler.setLevel(logging.DEBUG)
 
-    # Set a formatter for the console handler
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    console_handler.setFormatter(formatter)
+    # # Set a formatter for the console handler
+    # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # console_handler.setFormatter(formatter)
 
-    # Add the handler to the logger
-    logger.addHandler(console_handler)
+    # # Add the handler to the logger
+    # logger.addHandler(console_handler)
 
-    # Example usage
-    logger.info("Logger is now enabled.")
-    logger.debug("This is a debug message.")
+    # # Example usage
+    # logger.info("Logger is now enabled.")
+    # logger.debug("This is a debug message.")
+
+    logger = None
 
     try:
         if suppress_plot:

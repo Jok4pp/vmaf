@@ -10,7 +10,7 @@ static const double m2 = 2523.0 / 4096.0 * 128.0;
 static const double c1 = 3424.0 / 4096.0;
 static const double c2 = 2413.0 / 4096.0 * 32.0;
 static const double c3 = 2392.0 / 4096.0 * 32.0;
-static const double LMAX = 1000.0; // Example peak luminance
+static const double LMAX = 10000.0; // Example peak luminance
 
 double inverse_pq_eotf(double pqValue)
 {

@@ -41,6 +41,7 @@ def read_dataset(dataset, **kwargs):
     width = dataset.width if hasattr(dataset, 'width') else None
     height = dataset.height if hasattr(dataset, 'height') else None
     yuv_fmt = dataset.yuv_fmt if hasattr(dataset, 'yuv_fmt') else None
+    yuv_fmt = 'yuv420p10le'
 
     quality_width = dataset.quality_width if hasattr(dataset, 'quality_width') else None
     quality_height = dataset.quality_height if hasattr(dataset, 'quality_height') else None
@@ -48,6 +49,7 @@ def read_dataset(dataset, **kwargs):
     crop_cmd = dataset.crop_cmd if hasattr(dataset, 'crop_cmd') else None
     pad_cmd = dataset.pad_cmd if hasattr(dataset, 'pad_cmd') else None
     workfile_yuv_type = dataset.workfile_yuv_type if hasattr(dataset, 'workfile_yuv_type') else None
+    print(f"workfile_yuv_type: {workfile_yuv_type}")
     duration_sec = dataset.duration_sec if hasattr(dataset, 'duration_sec') else None
     fps = dataset.fps if hasattr(dataset, 'fps') else None
     start_frame = dataset.start_frame if hasattr(dataset, 'start_frame') else None
@@ -274,7 +276,9 @@ def read_dataset(dataset, **kwargs):
                           asset_dict=asset_dict,
                           )
             assets.append(asset)
-
+    # for asset in assets:
+    #     if 'dis_enc_bitdepth' in asset.asset_dict:
+    #         print(f"Bitdepth: {asset.asset_dict['dis_enc_bitdepth']}")
     return assets
 
 
@@ -564,6 +568,9 @@ def train_test_vmaf_on_dataset(train_dataset, test_dataset,
                                **kwargs):
 
     train_assets = read_dataset(train_dataset, **kwargs)
+    for asset in train_assets:
+        if 'dis_enc_bitdepth' in asset.asset_dict:
+            print(f"Bitdepth: {asset.asset_dict['dis_enc_bitdepth']}")
     train_raw_assets = None
     try:
         for train_asset in train_assets:
