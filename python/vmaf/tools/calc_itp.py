@@ -7,6 +7,11 @@ from skimage.transform import resize
 import colour as c
 from colour.difference import delta_E_ITP
 from colour import RGB_to_ICtCp
+import shlex
+
+# add at top of file, adjust to your YUV resolution:
+YUV_WIDTH  = 3840
+YUV_HEIGHT = 2160
 
 def load_hdr_pq_tiff(path: str) -> np.ndarray:
     """
@@ -41,6 +46,31 @@ def rgb_to_ictcp(lin_rgb: np.ndarray, peak_nits: float) -> np.ndarray:
     """
     return RGB_to_ICtCp(lin_rgb, method='ITU-R BT.2100-2 PQ', L_p=peak_nits)
 
+def load_hdr_pq_yuv(path: str, width: int, height: int) -> np.ndarray:
+    """
+    Lädt ein raw 10bit YUV 4:2:0 (LE) PQ-encoded file via ffmpeg und gibt
+    normierte PQ-RGB [0..1] als float32 zurück.
+    """
+    cmd = [
+        "ffmpeg", "-v", "verbose",
+        "-f", "rawvideo",
+        "-pix_fmt", "yuv420p10le",
+        "-s", f"{width}x{height}",
+        "-color_range", "limited",
+        "-color_primaries", "bt2020",
+        "-colorspace", "bt2020nc",
+        "-color_trc", "smpte2084",
+        "-i", path,
+        "-pix_fmt", "rgb48le",
+        "-f", "rawvideo", "-"
+    ]
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE, check=True)
+    print
+    arr = np.frombuffer(proc.stdout, dtype=np.uint16)
+    arr = arr.reshape((height, width, 3))
+    # normalize 16bit → [0..1]
+    return (arr.astype(np.float32) / 65535.0)
+
 def run_dEipt_folder_hdr(distorted_folder: str, reference_folder: str):
     """
     Vergleicht HDR-Kompression ohne GainMap anhand von DeltaE IPT.
@@ -50,14 +80,10 @@ def run_dEipt_folder_hdr(distorted_folder: str, reference_folder: str):
     print(f"Compare '{distorted_folder}' with '{reference_folder}' for DeltaE IPT")
 
     # gather files
-    files_ref = sorted([
-        f for f in os.listdir(reference_folder)
-        if f.lower().endswith(('.tif', '.tiff'))
-    ])
-    files_cmp = sorted([
-        f for f in os.listdir(distorted_folder)
-        if f.lower().endswith(('.tif', '.tiff'))
-    ])
+    files_ref = sorted(f for f in os.listdir(reference_folder)
+                       if f.lower().endswith(('.tif','.tiff','.yuv')))
+    files_cmp = sorted(f for f in os.listdir(distorted_folder)
+                       if f.lower().endswith(('.tif','.tiff','.yuv')))
 
     results = {}  # map distorted-filename → ΔE_ITP
     for f_ref in files_ref:
@@ -73,11 +99,17 @@ def run_dEipt_folder_hdr(distorted_folder: str, reference_folder: str):
 
         # load reference once
         ref_path = os.path.join(reference_folder, f_ref)
-        rgb_ref_orig = load_hdr_pq_tiff(ref_path)
+        if f_ref.lower().endswith('.yuv'):
+            rgb_ref_orig = load_hdr_pq_yuv(ref_path, YUV_WIDTH, YUV_HEIGHT)
+        else:
+            rgb_ref_orig = load_hdr_pq_tiff(ref_path)
 
         for f_cmp in matches:
             cmp_path = os.path.join(distorted_folder, f_cmp)
-            rgb_cmp = load_hdr_pq_tiff(cmp_path)
+            if f_cmp.lower().endswith('.yuv'):
+                rgb_cmp = load_hdr_pq_yuv(cmp_path, YUV_WIDTH, YUV_HEIGHT)
+            else:
+                rgb_cmp = load_hdr_pq_tiff(cmp_path)
 
             # resize reference to distorted resolution
             H, W, _ = rgb_cmp.shape
@@ -89,25 +121,25 @@ def run_dEipt_folder_hdr(distorted_folder: str, reference_folder: str):
                 anti_aliasing=True
             ).astype(np.float32)
 
-            # Debug: raw PQ-encoded RGB
-            print(f"ref={rgb_ref[0,0]}")
+            # debug: raw PQ-RGB @ (0,0)
+            print(f"[dbg] Raw PQ RGB    @ (0,0): ref={rgb_ref[0,0]} cmp={rgb_cmp[0,0]}")
 
             # PQ-EOTF → linear RGB
             rgb_cmp_lin = c.eotf(rgb_cmp, function="ST 2084", L_p=peak_nits)
             rgb_ref_lin = c.eotf(rgb_ref, function="ST 2084", L_p=peak_nits)
-            # Debug: linear RGB
-            #print(f"[debug] After EOTF RGB    @ (0,0): ref={rgb_ref_lin[0,0]} cmp={rgb_cmp_lin[0,0]}")
+            # debug: linear RGB @ (0,0)
+            print(f"[dbg] Linear RGB    @ (0,0): ref={rgb_ref_lin[0,0]} cmp={rgb_cmp_lin[0,0]}")
 
             # ICtCp conversion
             ict_ref = RGB_to_ICtCp(rgb_ref_lin, method='ITU-R BT.2100-2 PQ', L_p=peak_nits)
             ict_cmp = RGB_to_ICtCp(rgb_cmp_lin, method='ITU-R BT.2100-2 PQ', L_p=peak_nits)
-            # Debug: ICtCp
-            #print(f"[debug] ICtCp         @ (0,0): ref={ict_ref[0,0]} cmp={ict_cmp[0,0]}")
+            # debug: ICtCp @ (0,0)
+            print(f"[dbg] ICtCp         @ (0,0): ref={ict_ref[0,0]} cmp={ict_cmp[0,0]}")
 
             # ΔE_ITP
             delta = delta_E_ITP(ict_ref, ict_cmp)
-            # Debug: per-pixel ΔE_ITP at (0,0)
-            #print(f"[debug] ΔE_ITP pixel  @ (0,0): {delta[0,0]}")
+            # debug: per-pixel ΔE_ITP @ (0,0)
+            print(f"[dbg] ΔE_ITP pixel  @ (0,0): {delta[0,0]}")
 
             mean_delta = float(np.mean(delta))
             results[f_cmp] = mean_delta
@@ -116,8 +148,8 @@ def run_dEipt_folder_hdr(distorted_folder: str, reference_folder: str):
     return results
 
 # Basis- und Dist-Ordner
-dist_dir = r"LIVE-HDR_tiff/dis"
-ref_dir  = r"LIVE-HDR_tiff/ref"
+dist_dir = r"LIVE-HDR_2/dis"
+ref_dir  = r"LIVE-HDR_2/ref"
 
 # Liste der Videos
 # videos = [

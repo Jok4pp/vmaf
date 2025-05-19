@@ -36,7 +36,7 @@ static inline double pq_encode(double linear)
 {
     // ST 2084 forward: from linear [0..∞) to code value [0..1].
     // Typically we clamp negative or extremely large linear values.
-    double L = (linear < 0.0) ? 0.0 : linear;
+    double L = linear/ 10000.0;
     double num = c1 + c2*pow(L, m1);
     double den = 1.0 + c3*pow(L, m1);
     return pow(num/den, m2);
@@ -58,6 +58,8 @@ void rgb2020_to_ictcp(
     // Step 1: get linear LMS
     double L_lin, M_lin, S_lin;
     rgb2020_to_lms(R_lin, G_lin, B_lin, &L_lin, &M_lin, &S_lin);
+
+
 
     // Step 2: PQ encode each channel => L’, M’, S’
     double Lp = pq_encode(L_lin);

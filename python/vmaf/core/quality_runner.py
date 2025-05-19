@@ -20,7 +20,7 @@ from vmaf.core.train_test_model import TrainTestModel, LibsvmNusvrTrainTestModel
 from vmaf.core.feature_extractor import SsimFeatureExtractor, \
     MsSsimFeatureExtractor, \
     VmafFeatureExtractor, PsnrFeatureExtractor, VmafIntegerFeatureExtractor, \
-    FeatureExtractor
+    FeatureExtractor, DeltaEITPFeatureExtractor
 from vmaf.core.vmafexec_feature_extractor import CIEDE2000FeatureExtractor
 from vmaf.tools.decorator import override
 
@@ -1457,3 +1457,19 @@ if __name__ == '__main__':
     import doctest
 
     doctest.testmod()
+
+
+class DeltaEITPQualityRunner(QualityRunnerFromFeatureExtractor, ABC):
+    """
+    Quality runner for ΔEITP (ICtCp ΔE).
+    """
+    TYPE = 'DELTAEITP'
+    VERSION = '1.0'
+
+    @override(QualityRunnerFromFeatureExtractor)
+    def _get_feature_extractor_class(self):
+        return DeltaEITPFeatureExtractor
+
+    @override(QualityRunnerFromFeatureExtractor)
+    def _get_feature_key_for_score(self):
+        return 'delta_eitp'

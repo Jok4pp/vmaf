@@ -52,7 +52,7 @@ class ProcessRunner(object):
             
 def run_process(cmd, **kwargs):
     process_runner = ProcessRunner()
-    print("\n Command: \n", cmd)
+    # print("\n Command: \n", cmd)
     process_runner.run(cmd, kwargs)
     # subprocess.run(cmd, check=True, **kwargs)
     return 0

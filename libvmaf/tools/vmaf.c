@@ -72,7 +72,7 @@ static int validate_videos(video_input *vid1, video_input *vid2, bool common_bit
 
 static int fetch_picture(video_input *vid, VmafPicture *pic, int depth)
 {
-    fprintf(stderr, "fetching picture...\n");
+    // fprintf(stderr, "fetching picture...\n");
     
     int ret;
     video_input_ycbcr ycbcr;

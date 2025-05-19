@@ -177,11 +177,12 @@ static int extract(VmafFeatureExtractor *fex,
             const double Ymin =  64.0;
             const double Ymax = 940.0;
             const double Cmin =  64.0;
-            const double Cmax =1000.0; // motion-picture range U/V
+            const double Cmax = 960.0; // motion-picture range U/V
 
             double refYp  = (r_y - Ymin)/(Ymax - Ymin);
             double refCb = (r_u - (1<<9))/(Cmax - Cmin);
             double refCr = (r_v - (1<<9))/(Cmax - Cmin);
+
 
             double distYp  = (d_y - Ymin)/(Ymax - Ymin);
             double distCb = (d_u - (1<<9))/(Cmax - Cmin);

@@ -101,3 +101,21 @@ dis_videos = [
   }
 ]
 
+
+# ref_videos = [
+
+#   {
+#     "content_id": 0,
+#     "content_name": "firework",
+#     "path": "LIVE-HDR_1/ref/4k_ref_firework.yuv"
+#   }
+# ]
+# dis_videos = [
+#   {
+#     "asset_id": 0,
+#     "content_id": 0,
+#     "dmos": 32.11438210914943,
+#     "content_name": "firework",
+#     "path": "LIVE-HDR_1/dis/4k_3M_firework.yuv"
+#   }
+# ]

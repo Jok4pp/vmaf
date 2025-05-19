@@ -40,26 +40,63 @@
 //   }
 
 
+// {
+//   "version": "0.2.0",
+//   "configurations": [
+//     {
+//       "name": "Debug VMAF Python Script",
+//       "type": "debugpy",
+//       "request": "launch",
+//       "program": "${workspaceFolder}/python/vmaf/script/run_vmaf_training.py",
+//       "args": [
+//         "resource/dataset/LIVE-HDR_1.py",
+//         "resource/feature_param/vmaf_feature_with_deltaEITP.py",
+//         "resource/model_param/libsvmnusvr_v2.py",
+//         "workspace/model/test_model2.pkl"
+//       ],
+//       "cwd": "${workspaceFolder}",
+//       "env": {
+//         "PYTHONPATH": "${workspaceFolder}/python"
+//       },
+//       "console": "integratedTerminal", // Use the integrated terminal for output
+//       "justMyCode": false             // Debug into third-party libraries if needed
+//     }
+//   ]
+// }
+
+
 {
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug VMAF Python Script",
-      "type": "debugpy",
+      "name": "Debug FFmpeg swscale (yuv420p10le→rgb48le)",
+      "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/python/vmaf/script/run_vmaf_training.py",
+      "program": "/usr/bin/ffmpeg",
       "args": [
-        "resource/dataset/LIVE-HDR_1.py",
-        "resource/feature_param/vmaf_feature_with_deltaEITP.py",
-        "resource/model_param/libsvmnusvr_v2.py",
-        "workspace/model/test_model2.pkl"
+        "-v", "verbose",
+        "-f", "rawvideo",
+        "-pix_fmt", "yuv420p10le",
+        "-s", "3840x2160",
+        "-color_range", "limited",
+        "-color_primaries", "bt2020",
+        "-colorspace", "bt2020nc",
+        "-color_trc", "smpte2084",
+        "-i", "/home/joel-ludwig/Dokumente/Masterarbeit_Ludwig/vmaf/LIVE-HDR_2/ref/4k_ref_firework.yuv",
+        "-pix_fmt", "rgb48le",
+        "-f", "null",
+        "-"
       ],
       "cwd": "${workspaceFolder}",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}/python"
-      },
-      "console": "integratedTerminal", // Use the integrated terminal for output
-      "justMyCode": false             // Debug into third-party libraries if needed
+      "stopAtEntry": false,
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
     }
   ]
 }
