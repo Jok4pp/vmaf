@@ -1,0 +1,37 @@
+import yuvio
+import numpy as np
+
+def upsample_420_to_444(frame):
+    Y, U, V = frame
+    H, W = Y.shape
+
+    # Upsample U and V to (H, W) using nearest neighbor
+    U_upsampled = U.repeat(2, axis=0).repeat(2, axis=1)
+    V_upsampled = V.repeat(2, axis=0).repeat(2, axis=1)
+
+    # If the original height or width is odd, crop to match Y
+    U_upsampled = U_upsampled[:H, :W]
+    V_upsampled = V_upsampled[:H, :W]
+
+    return [Y, U_upsampled, V_upsampled]
+
+# Define the frame dimensions
+width = 3840
+height = 2160
+
+frame = yuvio.imread(r"LIVE-HDR_1/ref/4k_ref_firework2.yuv", width, height, "yuv444p10le")
+
+# YUV planes are accessed by index: 0=Y, 1=U, 2=V
+print("YUV (0,0):", frame[0][0,0], frame[1][0,0], frame[2][0,0])
+
+
+# Convert the YUV frame to RGB
+rgb = yuvio.to_rgb(frame, specification='bt2020', value_range='limited')
+
+rgb = rgb / 1023.0
+
+# Print RGB values at (0,0)
+print("RGB (0,0):", rgb[0,0])
+
+
+

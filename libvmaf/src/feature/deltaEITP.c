@@ -21,16 +21,43 @@ typedef struct DeltaEITPState {
 
 static void scale_chroma_planes_hbd(VmafPicture *in, VmafPicture *out)
 {
+    // copy luma
     memcpy(out->data[0], in->data[0], (size_t)out->h[0] * out->stride[0]);
-    const int ss_hor = in->pix_fmt != VMAF_PIX_FMT_YUV444P;
-    const int ss_ver = in->pix_fmt == VMAF_PIX_FMT_YUV420P;
 
-    for (unsigned p = 1; p < 3; p++) { // U and V
-        for (unsigned i = 0; i < out->h[p]; i++) {
-            uint16_t *src_line = (uint16_t*)in->data[p] + (i / (ss_ver ? 2 : 1)) * (in->stride[p] / 2);
-            uint16_t *dst_line = (uint16_t*)out->data[p] + i * (out->stride[p] / 2);
-            for (unsigned j = 0; j < out->w[p]; j++) {
-                dst_line[j] = src_line[j / (ss_hor ? 2 : 1)];
+    // input is 4:2:0 → out is 4:4:4
+    const int in_h = in->h[1], in_w = in->w[1];
+    const int out_h = out->h[1], out_w = out->w[1];
+    const int in_stride = in->stride[1] / 2;
+    const int out_stride = out->stride[1] / 2;
+    uint16_t *srcU = (uint16_t*)in->data[1], *dstU = (uint16_t*)out->data[1];
+    uint16_t *srcV = (uint16_t*)in->data[2], *dstV = (uint16_t*)out->data[2];
+
+    for (int p = 1; p <= 2; p++) {
+        uint16_t *src = (p == 1 ? srcU : srcV);
+        uint16_t *dst = (p == 1 ? dstU : dstV);
+        for (int y = 0; y < out_h; y++) {
+            double gy = (double)y * in_h / out_h;
+            int iy = (int)gy;
+            double fy = gy - iy;
+            int iy1 = iy + 1 < in_h ? iy + 1 : in_h - 1;
+            uint16_t *line0 = src +  iy  * in_stride;
+            uint16_t *line1 = src + iy1 * in_stride;
+            uint16_t *dline = dst +  y  * out_stride;
+            for (int x = 0; x < out_w; x++) {
+                double gx = (double)x * in_w / out_w;
+                int ix = (int)gx;
+                double fx = gx - ix;
+                int ix1 = ix + 1 < in_w ? ix + 1 : in_w - 1;
+                double v00 = line0[ix    ];
+                double v01 = line0[ix1   ];
+                double v10 = line1[ix    ];
+                double v11 = line1[ix1   ];
+                double w00 = (1 - fx) * (1 - fy);
+                double w01 = fx       * (1 - fy);
+                double w10 = (1 - fx) * fy;
+                double w11 = fx       * fy;
+                double val = v00*w00 + v01*w01 + v10*w10 + v11*w11;
+                dline[x] = (uint16_t)(val + 0.5);
             }
         }
     }
@@ -38,16 +65,43 @@ static void scale_chroma_planes_hbd(VmafPicture *in, VmafPicture *out)
 
 static void scale_chroma_planes(VmafPicture *in, VmafPicture *out)
 {
+    // copy luma
     memcpy(out->data[0], in->data[0], out->h[0] * out->stride[0]);
-    const int ss_hor = in->pix_fmt != VMAF_PIX_FMT_YUV444P;
-    const int ss_ver = in->pix_fmt == VMAF_PIX_FMT_YUV420P;
 
-    for (unsigned p = 1; p < 3; p++) { // U and V
-        for (unsigned i = 0; i < out->h[p]; i++) {
-            uint8_t *src_line = in->data[p] + (i / (ss_ver ? 2 : 1)) * in->stride[p];
-            uint8_t *dst_line = out->data[p] + i * out->stride[p];
-            for (unsigned j = 0; j < out->w[p]; j++) {
-                dst_line[j] = src_line[j / (ss_hor ? 2 : 1)];
+    // input is 4:2:0 → out is 4:4:4
+    const int in_h = in->h[1], in_w = in->w[1];
+    const int out_h = out->h[1], out_w = out->w[1];
+    const int in_stride = in->stride[1];
+    const int out_stride = out->stride[1];
+    uint8_t *srcU =  in->data[1], *dstU = out->data[1];
+    uint8_t *srcV =  in->data[2], *dstV = out->data[2];
+
+    for (int p = 1; p <= 2; p++) {
+        uint8_t *src = (p == 1 ? srcU : srcV);
+        uint8_t *dst = (p == 1 ? dstU : dstV);
+        for (int y = 0; y < out_h; y++) {
+            double gy = (double)y * in_h / out_h;
+            int iy = (int)gy;
+            double fy = gy - iy;
+            int iy1 = iy + 1 < in_h ? iy + 1 : in_h - 1;
+            uint8_t *line0 = src +  iy  * in_stride;
+            uint8_t *line1 = src + iy1 * in_stride;
+            uint8_t *dline = dst +  y  * out_stride;
+            for (int x = 0; x < out_w; x++) {
+                double gx = (double)x * in_w / out_w;
+                int ix = (int)gx;
+                double fx = gx - ix;
+                int ix1 = ix + 1 < in_w ? ix + 1 : in_w - 1;
+                double v00 = line0[ix   ];
+                double v01 = line0[ix1  ];
+                double v10 = line1[ix   ];
+                double v11 = line1[ix1  ];
+                double w00 = (1 - fx) * (1 - fy);
+                double w01 = fx       * (1 - fy);
+                double w10 = (1 - fx) * fy;
+                double w11 = fx       * fy;
+                double val = v00*w00 + v01*w01 + v10*w10 + v11*w11;
+                dline[x] = (uint8_t)(val + 0.5);
             }
         }
     }

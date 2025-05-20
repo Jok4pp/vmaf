@@ -20,7 +20,7 @@ def convert_mp4_to_yuv(input_file, output_file,
             cmd = [
                 "ffmpeg",
                 "-i", input_file,
-                "-pix_fmt", "yuv420p10le",
+                "-pix_fmt", "yuv444p10le",
                 "-s", f"{width}x{height}"
             ]
             if first_frame_only:
@@ -55,16 +55,16 @@ def convert_mp4_to_yuv(input_file, output_file,
         print("⚠️ FFmpeg not found. Install it or add to PATH.")
 
 if __name__ == "__main__":
-    mp4 = "resource/dataset/LIVE_HDR_Public/LIVE_HDR_Part1/4k_15M_football3.mp4"
+    mp4 = "resource/dataset/LIVE_HDR_Public/LIVE_HDR_Part1/4k_ref_firework.mp4"
     # raw YUV:
 
-    # convert_mp4_to_yuv(mp4,
-    #                   "LIVE-HDR_1/ref/4k_ref_football3.yuv",
-    #                   first_frame_only=True,
-    #                   output_format='yuv')
+    convert_mp4_to_yuv(mp4,
+                      "LIVE-HDR_1/ref/4k_ref_firework2.yuv",
+                      first_frame_only=True,
+                      output_format='yuv')
     
     # single‐frame YUV420 TIFF:
-    convert_mp4_to_yuv(mp4,
-                      "LIVE-HDR_tiff/dis/4k_15M_football3.tiff",
-                      first_frame_only=True,
-                      output_format='tiff')
+    # convert_mp4_to_yuv(mp4,
+    #                   "LIVE-HDR_tiff/dis/4k_15M_football3.tiff",
+    #                   first_frame_only=True,
+    #                   output_format='tiff')

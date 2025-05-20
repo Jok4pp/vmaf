@@ -52,7 +52,7 @@ def load_hdr_pq_yuv(path: str, width: int, height: int) -> np.ndarray:
     normierte PQ-RGB [0..1] als float32 zurück.
     """
     cmd = [
-        "ffmpeg", "-v", "verbose",
+        "ffmpeg", "-v", "error",
         "-f", "rawvideo",
         "-pix_fmt", "yuv420p10le",
         "-s", f"{width}x{height}",
@@ -143,13 +143,13 @@ def run_dEipt_folder_hdr(distorted_folder: str, reference_folder: str):
 
             mean_delta = float(np.mean(delta))
             results[f_cmp] = mean_delta
-            #print(f"{f_cmp}: ΔE_ITP={mean_delta:.4f}")
+            print(f"{f_cmp}: ΔE_ITP={mean_delta:.4f}")
 
     return results
 
 # Basis- und Dist-Ordner
-dist_dir = r"LIVE-HDR_2/dis"
-ref_dir  = r"LIVE-HDR_2/ref"
+dist_dir = r"LIVE-HDR_1/dis"
+ref_dir  = r"LIVE-HDR_1/ref"
 
 # Liste der Videos
 # videos = [
